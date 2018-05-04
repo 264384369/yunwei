@@ -1,0 +1,10 @@
+dmesg |grep enp***查看网卡实时速率，工作模式
+git remote -v 查看远程git仓库地址
+git checkout -b *** 创建并切换到分支
+git fetch 更新远程仓库
+git pull  更新本地仓库
+git diff master oringin/master 对比本地master和远程origin的master分支
+windows查看端口占用netstat -aon|findstr "49157"查出进程号，再通过进程号查出占用程序
+last -f wtmp(ubuntu查看开关机记录)
+lsb_release -a /uname -a(查看系统版本)
+GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' IDENTIFIED BY 'root' WITH GRANT OPTION;
