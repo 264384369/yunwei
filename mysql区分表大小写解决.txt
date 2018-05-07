@@ -1,0 +1,17 @@
+
+
+1、#which mysqld          //查看MySQL的命令路径
+
+/usr/sbin/mysqld
+
+2、#/usr/sbin/mysqld --verbose --help | grep -A 1 'Default options'       //查看mysql读取的默认配置文件位置
+
+/etc/my.cnf /etc/mysql/my.cnf /usr/etc/my.cnf ~/.my.cnf 
+
+(多个配置文件，前面的文件不存在才会读取后面的)
+
+3、#vim /etc/my.cnf        //编辑文件（如果发现是新文件，则编辑后面的文件）
+
+4、在[mysqld]下面加入lower_case_table_names=1    //不区分表名大小写
+
+5、#service mysqld restart    //重新启动mysql数据库
