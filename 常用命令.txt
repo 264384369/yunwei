@@ -27,4 +27,3 @@ for log in $logs
 
 echo "==================== end clean docker containers logs   =========================="
 
-d
