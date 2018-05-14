@@ -8,3 +8,23 @@ windows²é¿´¶Ë¿ÚÕ¼ÓÃnetstat -aon|findstr "49157"²é³ö½ø³ÌºÅ£¬ÔÙÍ¨¹ý½ø³ÌºÅ²é³öÕ¼ÓÃ³
 last -f wtmp(ubuntu²é¿´¿ª¹Ø»ú¼ÇÂ¼)
 lsb_release -a /uname -a(²é¿´ÏµÍ³°æ±¾)
 GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' IDENTIFIED BY 'root' WITH GRANT OPTION;
+ÐÞ¸ÄÊ±Çø£ºcp /usr/share/zoneinfo/Asia/Shanghai  /etc/localtime
+
+docker¿Õ¼äÂúÇåÀí½Å±¾
+
+#!/bin/sh
+
+echo "==================== start clean docker containers logs =========================="
+
+logs=$(find /var/lib/docker/containers/ -name *-json.log)
+
+for log in $logs
+        do
+                echo "clean logs : $log"
+                cat /dev/null > $log
+        done
+
+
+echo "==================== end clean docker containers logs   =========================="
+
+d
