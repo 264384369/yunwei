@@ -7,6 +7,7 @@ git diff master oringin/master 对比本地master和远程origin的master分支
 windows查看端口占用netstat -aon|findstr "49157"查出进程号，再通过进程号查出占用程序
 last -f wtmp(ubuntu查看开关机记录)
 lsb_release -a /uname -a(查看系统版本)
+CREATE USER 'admin'@'%' IDENTIFIED BY 'admin'; 
 GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' IDENTIFIED BY 'root' WITH GRANT OPTION;
 修改时区：cp /usr/share/zoneinfo/Asia/Shanghai  /etc/localtime
 
