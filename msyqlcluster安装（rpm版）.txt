@@ -1,0 +1,239 @@
+1）清理CentOS6.5自带的mysql服务，其中第一个命令我不执行也可以，其他系统如果不可以，还是建议执行
+
+
+    # yum -y remove mysql  
+    # rpm -qa | grep mysql*  
+    # rpm -e --nodeps mysql-libs-5.1.71-1.el6.x86_64  
+
+2）环境准备 
+
+创建文件夹（分如下3个类来创建对应的文件夹）
+
+
+    存储节点：# mkdir -p /var/lib/mysql/data   
+    管理节点：# mkdir -p /var/lib/mysql-cluster    SQL节点：可不用  文件夹授权  
+    进程DIR：# mkdir -p /var/run/mysqld        
+
+
+
+    使用如下的命令来变更权限保证可写入：  
+    # chmod -R 1777 /var/lib/mysql  
+    # chmod -R 1777 /var/run/mysqld  
+    # chmod -R 1777 /var/lib/mysql-cluster  
+
+3）安装mysql-cluster
+
+首先解压MySQL-Cluster-gpl-7.4.2-1.el6.x86_64.rpm-bundle.tar
+
+
+
+    # tar xvf MySQL-Cluster-gpl-7.4.2-1.el6.x86_64.rpm-bundle.tar  
+
+然后执行如下命令安装
+
+
+    # rpm -ivh MySQL-Cluster-server-gpl-7.3.4-1.el6.x86_64.rpm  
+    # rpm -ivh MySQL-Cluster-client-gpl-7.3.4-1.el6.x86_64.rpm  
+
+特别注意，当安装完毕server gpl包后，将出现如下提示信息，提醒我们整个cluster安装后的初次超级账户密码存在/root/.mysql_secret这个文件当中。
+
+
+    ---------------------------------------------------------------------------------------------------------------------  
+    A RANDOM PASSWORD HAS BEEN SET FOR THE MySQL root USER !  
+     You will find that password in '/root/.mysql_secret'.  
+     You must change that password on your first connect,  
+     no other statement but 'SET PASSWORD' will be accepted.  
+     See the manual for the semantics of the 'password expired' flag.  
+     Also, the account for the anonymous user has been removed.  
+     In addition, you can run:  
+      /usr/bin/mysql_secure_installation  
+     which will also give you the option of removing the test database.  
+     This is strongly recommended for production servers.  
+     -----------------------------------------------------------  
+
+2、配置管理节点
+1)执行如下命令：
+
+
+    # cd /var/lib/mysql-cluster  
+    # vi config.ini  
+
+2)配置config.ini文件
+
+
+    [computer]  
+     Id=mgr-server-01  
+     HostName=192.168.1.51  
+     [mgm default]  
+     datadir=/var/lib/mysql-cluster  
+     [mgm]  
+     HostName=192.168.1.51   
+     NodeId=60  
+     ExecuteOnComputer=mgr-server-01  
+     PortNumber=1186  
+     ArbitrationRank=3
+     [ndbd default]  
+     NoOfReplicas=3 
+     DataMemory=500M  
+     IndexMemory=500M  
+     [ndbd]  
+     HostName=192.168.1.52  
+     DataDir=/var/lib/mysql  
+     NodeId=1  
+     [ndbd]  
+     HostName=192.168.1.53  
+     DataDir=/var/lib/mysql  
+     NodeId=2
+     [ndbd]  
+     HostName=192.168.1.51  
+     DataDir=/var/lib/mysql  
+     NodeId=3   
+     [mysqld]  
+     HostName=192.168.1.52  
+     NodeId=81  
+     [mysqld]  
+     HostName=192.168.1.53  
+     NodeId=82
+     [mysqld]  
+     HostName=192.168.1.51  
+     NodeId=83
+
+3、SQL节点和数据节点的配置
+修改my.cnf文件，添加如下内容：
+
+
+    [client]  
+     socket=/var/lib/mysql/mysql.sock  
+     [mysqld]  
+     max_connections=100  
+     datadir=/var/lib/mysql  
+     socket=/var/lib/mysql/mysql.sock  
+     ndbcluster  
+     ndb-connectstring=192.168.1.51  
+     [mysqld_safe]  
+     log-error=/var/log/mysqld.log  
+     #pid-file=/var/run/mysqld/mysqld.pid  
+     pid-file=/var/lib/mysql/mysqld.pid  
+     [mysql_cluster]  
+     ndb-connectstring=192.168.1.51   
+
+4、MySQL Cluster初次启动命令以及用户密码更改调整：（请严格按照次序启动）
+1）启动mysql-cluster
+执行初次启动前请先确认 将两台机器的防火墙关闭（service iptables stop 或者 设定 防火墙端口可通，两个端口即通讯端口1186、数据端口3306 )
+初次启动mgt console命令：ndb_mgmd -f /var/lib/mysql-cluster/config.ini
+启动均衡节点命令：              ndbd --initial                      注意：节点需要把my.cnf复制到/etc/下才能初始化成功
+启动数据节点命令：              mysqld_safe --defaults-file=/etc/my.cnf --explicit_defaults_for_timestamp &
+注意在启动过程中需要监测整个控制台输出，发现有错误信息需要及时解决，根据错误日志内容来解决。
+---------------------------------------------------------------------------------------------------------
+如果一起正常，使用如下命令将Management console开启：  ndb_mgm
+执行# show
+检查是否各个节点都已经完全启动，如下，每个节点都已经连接，如果有节点没连接，会看到
+
+
+    ndb_mgm> show  
+    Connected to Management Server at: 192.168.100.218:1186  
+    Cluster Configuration  
+    ---------------------  
+    [ndbd(NDB)] 2 node(s)  
+    id=1 @192.168.100.217 (mysql-5.6.21 ndb-7.4.2, Nodegroup: 0)  
+    id=2 @192.168.100.218 (mysql-5.6.21 ndb-7.4.2, Nodegroup: 0, *)  
+    [ndb_mgmd(MGM)] 1 node(s)  
+    id=60 @192.168.100.218 (mysql-5.6.21 ndb-7.4.2)  
+    [mysqld(API)] 2 node(s)  
+    id=81 @192.168.100.217 (mysql-5.6.21 ndb-7.4.2)  
+    id=82 @192.168.100.218 (mysql-5.6.21 ndb-7.4.2)  
+
+如果有节点没连接，如下，id=81一行，表示没连接，检查问题故障点
+
+
+    ndb_mgm> show  
+    Cluster Configuration  
+    --------------------  
+    [ndbd(NDB)] 2 node(s)  
+    id=1 @192.168.100.217 (mysql-5.6.21 ndb-7.4.2, Nodegroup: 0)  
+    id=2 @192.168.100.218 (mysql-5.6.21 ndb-7.4.2, Nodegroup: 0, *)  
+    [ndb_mgmd(MGM)] 1 node(s)  
+    id=60 @192.168.100.218 (mysql-5.6.21 ndb-7.4.2)  
+    [mysqld(API)] 2 node(s)  
+    id=81 (not connected, accepting connect from 192.168.100.217)  
+    id=82 @192.168.100.218 (mysql-5.6.21 ndb-7.4.2)  
+
+2）修改密码
+当mysqld 启动完毕正常后（可以使用pgrep mysqld来获取进程ID)，我们可以使用如下命令修改：
+
+
+    mysql -u root -p;  
+
+随机密码(具体请参见/root/.mysql_secret文件获取)，进入后使用如下指令修改密码：
+
+
+    SET PASSWORD = PASSWORD('新密码');  
+
+但是这个新密码，必须是hash值，所以要使用如下方式获取密码字符串的hash值
+
+
+    select password('111111')；  
+
+然而执行上面命令，会让你先设置密码，郁闷，又绕回来了，那就去其他地方的mysql上执行下吧
+111111的hash值是“*FD571203974BA9AFE270FE62151AE967ECA5E0AA”
+SET PASSWORD = PASSWORD('*FD571203974BA9AFE270FE62151AE967ECA5E0AA');
+好郁闷啊，设置完以后，登陆还必须使用密文，那好吧，就用密文进去，进去后使用如下命令，强制使用明文进行登陆
+
+
+    use mysql;  
+    delete from user;  
+    grant all on *.* to root@'%' identified by "111111" with grant option;  
+    flush privileges;  
+    quit;  
+
+然后，可以使用明文密码登陆了
+几台装有SQL数据节点的服务器皆需要执行一遍上述命令；
+5、当上面步奏都操作完成以后，测试cluster是否正常工作
+1）简单功能测试
+在218上进入mysql后执行如下：
+
+
+
+    create database clustertest;  
+    use clustertest;   
+    CREATE TABLE testtable(Count INT) ENGINE=NDBCLUSTER;   
+
+注意：ENGINE=NDBCLUSTER; 引擎必须使用NDBCLUSTER才可以同步，否则不会进行同步
+检查是否成功，在217上，进去mysql，查看是否自动创建了database和table，如果创建，则表示成功，如果失败，请检查环境配置
+2）测试灾备情况下数据是否可以同步（一台数据库停掉了，再启动的时候，是否会将遗失的数据自动补充）
+停掉217上的mysql服务，在218上执行
+
+
+    insert into testtable values (1);  
+
+启动217的mysql服务，使用show确认217的数据库节点已经连接上了，执行如下语句
+
+
+    select * from testtable;  
+
+如果发现有数据，则表示功能完备
+6、关闭Cluster：（需要严格按照次序执行）
+关闭数据节点：# mysqld stop  (SQL节点可以用mysqladmin shutdown或别的方式关闭。)
+在管理节点上执行：# ndb_mgm -e shutdown
+将安全的关闭管理节点和数据节点。
+关闭后使用如下的进程检测命令查看一下是否退出来了：
+
+
+    # pgrep mysqld  
+    # ps aux | grep nbdb   
+
+如果没有，找到对应的pid进行kill 操作即可
+kill -9 进程号
+7、再次启动Cluster方案：
+启动整个cluster的次序，注意，一些语句已经减去了初始化的内容：
+
+
+    ndb_mgmd -f /var/lib/mysql-cluster/config.ini  
+    ndbd  
+    mysqld_safe --defaults-file=/etc/my.cnf --explicit_defaults_for_timestamp &  
+
+备注：
+1、mysql安装后，默认会自动启动的，每次启动cluster的时候，都需要先把mysql的服务关闭，太麻烦，于是可以执行如下命令（我出手有点狠）：
+    chkconfig --level 123456 mysql off
+2、防火墙问题，偷个懒，我懒得去一一开放端口，干脆把防火墙直接关了
+    chkconfig --level 123456 iptables off
