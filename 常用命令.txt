@@ -28,3 +28,7 @@ for log in $logs
 
 echo "==================== end clean docker containers logs   =========================="
 
+docker run增加如下参数，限制生成的json.log单个文件大小和保留文件个数：
+--log-opt max-size=10m --log-opt max-file=3
+
+unrar x *.rar ubuntu下解压rar

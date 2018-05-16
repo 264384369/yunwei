@@ -1,0 +1,36 @@
+1. 查看3306端口是否正常
+
+root@node1:~# netstat -an | grep 3306
+tcp        0      0 127.0.0.1:3306          0.0.0.0:*               LISTEN
+
+注意：现在的3306端口绑定的IP地址是本地的127.0.0.1
+
+ 
+
+2. 修改Mysql配置文件（注意路径，跟之前网上的很多版本位置都不一样）
+
+root@node1:~# vim /etc/mysql/mysql.conf.d/mysqld.cnf
+
+找到
+
+bind-address            = 127.0.0.1
+
+前面加#注释掉
+
+ 
+
+3. 重启Mysql
+
+root@node1:~# /etc/init.d/mysql restart
+[ ok ] Restarting mysql (via systemctl): mysql.service.
+
+ 
+
+4. 再次查看端口信息
+
+root@node1:~# netstat -an | grep 3306
+tcp6       0      0 :::3306                 :::*                    LISTEN
+
+ 
+
+OK!
