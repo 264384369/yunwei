@@ -1,0 +1,23 @@
+初次启动mgt console命令：ndb_mgmd -f /var/lib/mysql-cluster/config.ini
+启动均衡节点命令：              ndbd --initial
+启动数据节点命令：              mysqld_safe --defaults-file=/etc/my.cnf --explicit_defaults_for_timestamp &
+修改了配置文件后，需要添加--initial参数重新读取才行： ndb_mgmd -f /var/lib/mysql-cluster/config.ini --initial
+查看变量修改是否生效：   ndb_config -q MaxNoOfAttributes
+
+关闭Cluster：（需要严格按照次序执行）
+关闭数据节点：# mysqld stop  (SQL节点可以用mysqladmin shutdown或别的方式关闭。)
+在管理节点上执行：# ndb_mgm -e shutdown
+将安全的关闭管理节点和数据节点。
+关闭后使用如下的进程检测命令查看一下是否退出来了：
+[plain] view plain copy
+# pgrep mysqld  
+# ps aux | grep nbdb   
+如果没有，找到对应的pid进行kill 操作即可
+kill -9 进程号
+
+再次启动Cluster方案：
+启动整个cluster的次序，注意，一些语句已经减去了初始化的内容：
+[plain] view plain copy
+ndb_mgmd -f /var/lib/mysql-cluster/config.ini  
+ndbd  
+mysqld_safe --defaults-file=/etc/my.cnf --explicit_defaults_for_timestamp &  
