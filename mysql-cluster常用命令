@@ -1,4 +1,4 @@
-初次启动mgt console命令：ndb_mgmd -f /var/lib/mysql-cluster/config.ini
+﻿初次启动mgt console命令：ndb_mgmd -f /var/lib/mysql-cluster/config.ini
 启动均衡节点命令：              ndbd --initial
 启动数据节点命令：              mysqld_safe --defaults-file=/etc/my.cnf --explicit_defaults_for_timestamp &
 修改了配置文件后，需要添加--initial参数重新读取才行： ndb_mgmd -f /var/lib/mysql-cluster/config.ini --initial
@@ -12,6 +12,7 @@
 [plain] view plain copy
 # pgrep mysqld  
 # ps aux | grep nbdb   
+使用mysqladmin -uroot -p123456 shutdown 关闭mysql服务
 如果没有，找到对应的pid进行kill 操作即可
 kill -9 进程号
 
