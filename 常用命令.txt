@@ -33,3 +33,5 @@ docker run增加如下参数，限制生成的json.log单个文件大小和保留文件个数：
 
 unrar x *.rar ubuntu下解压rar
 mkdir -p *** 创建多级目录
+show variables like '%slow%';查看mysql的参数设置
+mysql -uroot -p123456 -e "show global status" > C:\Users\Administrator\Desktop\logs\log-12.log输出命令结果到文件

@@ -22,3 +22,5 @@ kill -9 进程号
 ndb_mgmd -f /var/lib/mysql-cluster/config.ini  
 ndbd  
 mysqld_safe --defaults-file=/etc/my.cnf --explicit_defaults_for_timestamp &  
+
+all report memoryusage查看data，index使用情况（DataMemory，IndexMemory这两个参数）
