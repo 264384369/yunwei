@@ -30,6 +30,7 @@ echo "==================== end clean docker containers logs   ==================
 
 docker run增加如下参数，限制生成的json.log单个文件大小和保留文件个数：
 --log-opt max-size=10m --log-opt max-file=3
+通过修改容器下的config.json文件修改容器参数时需关闭docker服务（service docker stop），否则不生效
 
 unrar x *.rar ubuntu下解压rar
 mkdir -p *** 创建多级目录
