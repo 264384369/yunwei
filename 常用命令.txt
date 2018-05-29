@@ -10,7 +10,7 @@ lsb_release -a /uname -a(查看系统版本)
 CREATE USER 'admin'@'%' IDENTIFIED BY 'admin'; 
 GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' IDENTIFIED BY 'root' WITH GRANT OPTION;
 修改时区：cp /usr/share/zoneinfo/Asia/Shanghai  /etc/localtime
-
+查看USB设备，使用lsusb命令
 docker空间满清理脚本
 
 #!/bin/sh
@@ -45,3 +45,8 @@ CONCAT(ROUND(data_length/(1024*1024*1024),2),'G') AS 'Data Size',
 CONCAT(ROUND(index_length/(1024*1024*1024),2),'G') AS 'Index Size' ,
 CONCAT(ROUND((data_length+index_length)/(1024*1024*1024),2),'G') AS'Total'FROM information_schema.TABLES WHERE table_schema LIKE '数据库名'; 
 在[mysql]添加lower_case_table_names=1(不区分大小写0为区分大小写)
+
+U盘安装centos 7 提示 “Warning: /dev/root does not exist, could not boot” 解决办法
+在选择安装的时候按TAB进入启动编辑，将vmlinuz initrd=initrd.imginst.stage2=hd:LABEL=CentOS\x207\x20x86_64 rd.live.check quiet 改为：vmlinuz initrd=initrd.img inst.stage2=hd:/dev/sda4 quite，然后按enter启动
+
+ubuntu 用cp /usr/share/zoneinfo/Asia/Shanghai /etc/locatetime 修改时间后需要用echo 'Asia/Shanghai' >/etc/timezone修改时区
