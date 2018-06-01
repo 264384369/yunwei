@@ -50,3 +50,5 @@ UÅÌ°²×°centos 7 ÌáÊ¾ ¡°Warning: /dev/root does not exist, could not boot¡± ½â¾ö°
 ÔÚÑ¡Ôñ°²×°µÄÊ±ºò°´TAB½øÈëÆô¶¯±à¼­£¬½«vmlinuz initrd=initrd.imginst.stage2=hd:LABEL=CentOS\x207\x20x86_64 rd.live.check quiet ¸ÄÎª£ºvmlinuz initrd=initrd.img inst.stage2=hd:/dev/sda4 quite£¬È»ºó°´enterÆô¶¯
 
 ubuntu ÓÃcp /usr/share/zoneinfo/Asia/Shanghai /etc/locatetime ĞŞ¸ÄÊ±¼äºóĞèÒªÓÃecho 'Asia/Shanghai' >/etc/timezoneĞŞ¸ÄÊ±Çø
+
+ls *.zip | xargs -n1 unzip -n -d /package ÅúÁ¿½âÑ¹µ½Ö¸¶¨ÎÄ¼ş¼Ğ
