@@ -58,3 +58,5 @@ sudo echo "nvidia-384 hold" | sudo dpkg --set-selections   禁止软件更新
 sudo dpkg --get-selections | more  查看软件更新状态
 
 chvt,用法 chvt n（n＝1，2，3，12，终端的名字）。如果希望知道当前终端的名字，可以使用命令fgconsole 终端切换
+
+./cuda-linux64-rel-8.0.61-21551265.run -noprompt 安装cuda并取消提示
