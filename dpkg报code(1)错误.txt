@@ -1,0 +1,16 @@
+E: Sub-process /usr/bin/dpkg returned an error code (1)
+
+解决方法：
+
+$sudo gedit //var/lib/dpkg/info/grub-efi-amd64.postinst
+
+在set e后， 下一行，输入： exit 0
+
+保存后，在终端运行命令：
+
+$sudo dpkg --configure -a
+
+
+原因：
+
+这是ubuntu的一个bug, 是在更新后postinstall script没有很好的clean up. 以上解决方法强制提前退出.
