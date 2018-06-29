@@ -1,0 +1,17 @@
+./cuda_8.0.xx_linux.run 提供了这种批量安装的方式：
+
+        ./cuda_8.0.44_linux.run  --silent   --driver --toolkit  --toolkitpath=/tmp/ --samples  --samplespath=/tmp/  --verbose
+
+--silent   执行无用户交互的安装，基于后面的参数进行用户定制化安装
+
+--driver   安装cuda Driver
+
+--toolkit   安装CUDA Toolkit 
+
+--toolkitpath=<path>  cuda  toolkit 的安装目录
+
+--samples 安装samples
+
+--samplespath=<path>         samples 的安装目录
+
+ --verbose 打印安装日志
