@@ -1,0 +1,18 @@
+
+    下载。在TeamViewer官网找到合适的TeamViewer资源链接，并通过wget工具进行下载，例如执行
+    wget https://download.teamviewer.com/download/teamviewer_i386.deb
+    安装。运行以下命令进行安装
+    sudo dpkg -i teamviewer*.deb; sudo apt-get -f install
+    接受license。
+        停止服务。执行命令
+        sudo teamviewer --daemon stop
+        修改配置文件。 在文件/opt/teamviewer/config/global.conf末尾增加以下内容（由于只读限制，所以可能需要用到管理员权限）
+        [int32] EulaAccepted = 1
+        [int32] EulaAcceptedRevision = 6
+        重新启动服务
+        sudo teamviewer --daemon start
+    获取id并设置密码
+    你可以通过以下方式获取teamviewer的登录id
+    teamviewer --info print id
+    另外，通过以下命令设置登录密码
+    sudo teamviewer --passwd [NEWPASSWORD]
