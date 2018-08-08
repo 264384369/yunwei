@@ -67,3 +67,21 @@ WHERE a.tablespace_name = b.tablespace_name
 AND a.tablespace_name = c.tablespace_name;
 查看表空间的使用情况
 
+
+SELECT a.tablespace_name "RICHDA",
+total "total",
+free "free",
+(total - free) "use",
+total / (1024 * 1024 * 1024) "total(G)",
+free / (1024 * 1024 * 1024) "free(G)",
+(total - free) / (1024 * 1024 * 1024) "use(G)",
+round((total - free) / total, 4) * 100 "use %"
+FROM (SELECT tablespace_name, SUM(bytes) free
+FROM dba_free_space
+GROUP BY tablespace_name) a,
+(SELECT tablespace_name, SUM(bytes) total
+FROM dba_data_files
+GROUP BY tablespace_name) b
+WHERE a.tablespace_name = b.tablespace_name;
+加单位的查询使用情况 
+
