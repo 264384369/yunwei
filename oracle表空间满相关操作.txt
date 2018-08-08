@@ -1,0 +1,69 @@
+Oracle表空间数据文件大小的限制
+
+由于Oracle的Rowid使用22位来代表数据块号，因此Oracle表空间数据文件每个数据文件最多只能包含2^22个数据块。
+
+也因此数据库表空间的数据文件不是无限增长的，例如：
+
+在数据块为8k的情况下，单个数据文件的最大容量为8K*2^22 = 32G
+
+同理，
+
+数据块为2K，数据文件最大约8G
+
+数据块为32，数据文件最大约16*8G
+
+故若达到这个最大容量之后，则即便是设置了自增长，也不是无限自增长，此时则需要为这个表空间添加数据文件
+
+
+select tablespace_name,sum(bytes/1024/1024) mb from dba_segments where tablespace_name='USER1' group by tablespace_name;
+----查询表空间的目前使用大小
+
+
+select tablespace_name,bytes/1024/1024 mb from dba_data_files;
+---查询aaa表空间的分配大小
+
+
+select FILE_NAME,TABLESPACE_NAME,AUTOEXTENSIBLE,MAXBYTES,INCREMENT_BY from dba_data_files where tablespace_name='RICHDA';
+查询自动扩展大小
+
+
+select tablespace_name,autoextensible from dba_data_files;
+---查询aaa表空间是否自动扩展
+
+
+select tablespace_name,maxblocks*8 from dba_data_files; 
+---查询aaa表空间最大扩展大小（注：当表空间开启了自动扩展特性，表空间会一直扩展到操作系统支持的最大大小）
+
+
+select username,default_tablespace from user_users;
+查看当前用户的缺省表空间
+
+
+alter database datafile '/u01/app/oracle/oradata/sktest/skuser.dbf' autoextend on;
+开启表空间自动扩展功能
+alter database datafile '/u01/app/oracle/oradata/sktest/skuser.dbf' autoextend off;
+关闭表空间自动扩展功能
+
+
+select tablespace_name, file_id, file_name from dba_data_files order by tablespace_name;
+查看表空间和物理文件路径
+
+
+ alter tablespace RICHDA add datafile '/oracle/oradata/richda/richda-1.dbf' size 2018M autoextend on next 200M Maxsize UNLIMITED;
+为表空间增加数据文件
+
+
+SELECT SUM(bytes) / (1024 * 1024) AS free_space, tablespace_name
+FROM dba_free_space
+GROUP BY tablespace_name;
+SELECT a.tablespace_name,
+a.bytes total,
+b.bytes used,
+c.bytes free,
+(b.bytes * 100) / a.bytes "% USED ",
+(c.bytes * 100) / a.bytes "% FREE "
+FROM sys.sm$ts_avail a, sys.sm$ts_used b, sys.sm$ts_free c
+WHERE a.tablespace_name = b.tablespace_name
+AND a.tablespace_name = c.tablespace_name;
+查看表空间的使用情况
+
