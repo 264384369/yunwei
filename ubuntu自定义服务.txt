@@ -1,0 +1,55 @@
+第一步：
+新建 service 文件即 xxx.service 文件。
+1、转到指定目录下
+$ cd  /lib/systemd/system
+2、创建 xxx.service 文件
+$ vi xxx.service
+按 i 进入编辑模式， 复制以下代码
+
+[Unit]                                                                       
+Description=My xxx Service
+
+[Service]
+#用户一般是 root 用户
+User=root 
+#该服务进程具体的shell执行文件，xxx 是文件名，不是文件夹名
+ExecStart=/usr/sbin/xxx
+#以下这些不用改，照旧就行
+SuccessExitStatus=143
+TimeoutStopSec=10
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+
+在 vim 编辑界面中右键把代码复制过去
+shift+z+z 保存退出
+=============================================================
+
+第二步：
+新建 xxx 文件。
+1、转到指定目录下
+$ cd  /usr/sbin
+2、创建 xxx 文件
+$ vi xxx
+按 i 进入编辑模式，输入你想要执行的代码，例如执行 java 程序的代码
+sudo java -jar /home/socket/P2PServer.jar server config.yml
+代码的执行一定要对，自己可以先在命令行里测试代码的正确性，不然有错的话服务是会启动失败的
+shift+z+z 保存退出
+=============================================================
+
+第三步：
+让服务生效。
+1、不知道啥意思
+$ sudo systemctl daemon-reload
+2、设置开机启动
+$ sudo systemctl enable xxx.service
+3、启动服务
+$ sudo systemctl start xxx.service
+4、查看服务是否正确启动
+$  sudo systemctl status xxx.service 
+=============================================================
+
+关闭服务：sudo systemctl stop xxx.service
+如果查看状态后发现服务出现 exit 字眼，可以使用  journalctl -xe 查看错误原因
