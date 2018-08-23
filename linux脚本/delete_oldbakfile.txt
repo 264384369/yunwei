@@ -1,0 +1,9 @@
+﻿##!/bin/bash
+##build by  2017-7-18
+##
+##
+##
+find /usr/mysqldata/ -type f -mtime +7 -exec rm -f {} \;
+echo `date` "delete expired backup file" >> /usr/mysqldata/message
+echo `date` "backup file current" `find /usr/mysqldata/ -type f` >> /usr/mysqldata/message
+
