@@ -1,0 +1,77 @@
+非科学上网想安装k8s比较困难，下面是我不断试错找出来较快速的能搭建k8s环境的步骤，仅供参考。
+
+    添加镜像源
+    echo “deb [arch=amd64] https://mirrors.ustc.edu.cn/kubernetes/apt kubernetes-xenial main” | sudo tee -a /etc/apt/sources.list
+    apt-get update
+    可能会报错GPG ERROR
+
+gpg --keyserver keyserver.ubuntu.com --recv-keys E084DAB9 
+gpg --export --armor E084DAB9 | sudo apt-key add - 
+
+
+E084DAB9 是提示的NO_PUBLICKEY公匙的后八位
+
+    重新apt-get update
+
+    安装
+
+apt-get install -y kubelet=1.10.3-00 kubeadm=1.10.3-00 kubectl=1.10.3-00
+
+
+    下载镜像
+    注意下载的镜像版本和kubelet 的版本要一致
+    直接下载google的镜像肯定是下不到的，就通过下载aliyun的镜像然后重新tag镜像给后面的初始化使用
+
+#!/bin/bash
+
+set -e
+
+# Check version in https://kubernetes.io/docs/reference/setup-tools/kubeadm/kubeadm-init/
+# Search "Running kubeadm without an internet connection"
+# For running kubeadm without an internet connection you have to pre-pull the required master images for the version of choice:
+KUBE_VERSION=v1.10.3
+KUBE_PAUSE_VERSION=3.1
+ETCD_VERSION=3.1.12
+DNS_VERSION=1.14.8
+
+GCR_URL=k8s.gcr.io
+ALIYUN_URL=registry.cn-shenzhen.aliyuncs.com/cookcodeblog
+
+images=(kube-proxy-amd64:${KUBE_VERSION}
+kube-scheduler-amd64:${KUBE_VERSION}
+kube-controller-manager-amd64:${KUBE_VERSION}
+kube-apiserver-amd64:${KUBE_VERSION}
+pause-amd64:${KUBE_PAUSE_VERSION}
+etcd-amd64:${ETCD_VERSION}
+k8s-dns-sidecar-amd64:${DNS_VERSION}
+k8s-dns-kube-dns-amd64:${DNS_VERSION}
+k8s-dns-dnsmasq-nanny-amd64:${DNS_VERSION})
+
+
+for imageName in ${images[@]} ; do
+  docker pull $ALIYUN_URL/$imageName
+  docker tag  $ALIYUN_URL/$imageName $GCR_URL/$imageName
+  docker rmi $ALIYUN_URL/$imageName
+done
+
+docker images
+
+
+    启动
+
+kubeadm init --apiserver-advertise-address 192.168.1.102 --pod-network-cidr=10.244.0.0/16 --kubernetes-version v1.10.3
+
+可能会报swap相关的错，执行
+
+swapoff -a
+
+即可
+
+输出类似
+
+You can now join any number of machines by running the following on each node
+as root:
+
+  kubeadm join 192.168.1.102:6443 --token 2w6obv.67mh3872zeu1oseg --discovery-token-ca-cert-hash sha256:b67dc4d88936cf905c02fbedc7ae2e67b75e23297dc59425cb3be177bc80117e
+
+即成功。

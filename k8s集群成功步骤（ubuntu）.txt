@@ -1,0 +1,83 @@
+下载https://github.com/EagleChen/kubernetes_init/raw/master/kube_apt_key.gpg
+
+ 
+1.安装软件包
+
+cat kube_apt_key.gpg | apt-key add -
+
+echo "deb [arch=amd64] https://mirrors.ustc.edu.cn/kubernetes/apt kubernetes-$(lsb_release -cs) main" >> /etc/apt/sources.list
+
+apt-get update
+
+apt-get install -y --allow-unauthenticated kubelet=1.10.3-00 kubeadm=1.10.3-00 kubectl=1.10.3-00
+
+2.拉取镜像（国内无法访问google,所以用以下脚本）
+
+#!/bin/bash
+
+set -e
+
+# Check version in https://kubernetes.io/docs/reference/setup-tools/kubeadm/kubeadm-init/
+# Search "Running kubeadm without an internet connection"
+# For running kubeadm without an internet connection you have to pre-pull the required master images for the version of choice:
+KUBE_VERSION=v1.10.3
+KUBE_PAUSE_VERSION=3.1
+ETCD_VERSION=3.1.12
+DNS_VERSION=1.14.8
+
+GCR_URL=k8s.gcr.io
+ALIYUN_URL=registry.cn-shenzhen.aliyuncs.com/cookcodeblog
+
+images=(kube-proxy-amd64:${KUBE_VERSION}
+kube-scheduler-amd64:${KUBE_VERSION}
+kube-controller-manager-amd64:${KUBE_VERSION}
+kube-apiserver-amd64:${KUBE_VERSION}
+pause-amd64:${KUBE_PAUSE_VERSION}
+etcd-amd64:${ETCD_VERSION}
+k8s-dns-sidecar-amd64:${DNS_VERSION}
+k8s-dns-kube-dns-amd64:${DNS_VERSION}
+k8s-dns-dnsmasq-nanny-amd64:${DNS_VERSION})
+
+
+for imageName in ${images[@]} ; do
+  docker pull $ALIYUN_URL/$imageName
+  docker tag  $ALIYUN_URL/$imageName $GCR_URL/$imageName
+  docker rmi $ALIYUN_URL/$imageName
+done
+
+docker images
+
+注：要使用bash XXX.sh运行脚本
+
+（以上步骤所有节点都要运行）
+
+
+3.master
+
+kubeadm init --apiserver-advertise-address 192.168.1.155 --pod-network-cidr=172.18.0.0/16 --kubernetes-version v1.10.3
+
+可能会报swap相关的错，执行
+
+swapoff -a
+
+即可
+
+输出类似
+
+You can now join any number of machines by running the following on each node
+as root:
+
+  kubeadm join 192.168.1.155:6443 --token 2w6obv.67mh3872zeu1oseg --discovery-token-ca-cert-hash sha256:b67dc4d88936cf905c02fbedc7ae2e67b75e23297dc59425cb3be177bc80117e
+
+即成功。
+
+4.node
+
+kubeadm join 192.168.1.155:6443 --token 2w6obv.67mh3872zeu1oseg --discovery-token-ca-cert-hash sha256:b67dc4d88936cf905c02fbedc7ae2e67b75e23297dc59425cb3be177bc80117e
+
+
+完成
+
+使用kubectl get nodes 查看是否正常
+使用kubectl get pods -n kube-system -owide查看系统pod是否成功在节点上安装
+使用journalctl -f -u kubelet 查看节点报错位置

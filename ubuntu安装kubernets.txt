@@ -1,0 +1,314 @@
+				Ubuntu下kubernets集群安装部署
+
+安装kubeadm相关工具
+1. 安装docker
+
+apt-get update
+
+apt-get install -y \
+
+    apt-transport-https \
+
+    ca-certificates \
+
+    curl \
+
+    software-properties-common
+
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
+
+add-apt-repository \
+
+   "deb https://download.docker.com/linux/$(. /etc/os-release; echo "$ID") \
+
+   $(lsb_release -cs) \
+
+   stable"
+
+apt-get update && apt-get install -y docker-ce=$(apt-cache madison docker-ce | grep 17.03 | head -1 | awk '{print $3}')
+
+由于https://download.docker.com被墙，需要使用国内镜像，可使用中科大镜像源：mirrors.ustc.edu.cn/docker-ce 替换download.docker.com
+
+ 
+
+启动docker
+
+systemctl enable docker && systemctl start docker
+
+ 
+
+ 
+
+ 
+2. 安装kubeadm,kubelet,kubectl
+
+ 
+
+官方安装方式：
+
+apt-get update && apt-get install -y apt-transport-https
+
+curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
+
+cat <<EOF >/etc/apt/sources.list.d/kubernetes.list
+
+deb http://apt.kubernetes.io/ kubernetes-xenial main
+
+EOF
+
+apt-get update
+
+apt-get install -y kubelet kubeadm kubectl
+
+ 
+
+国内网络由于被墙不能安装，需要使用国内镜像，安装方式：
+
+ 
+
+下载https://github.com/EagleChen/kubernetes_init/raw/master/kube_apt_key.gpg
+
+ 
+
+cat kube_apt_key.gpg | apt-key add -
+
+echo "deb [arch=amd64] https://mirrors.ustc.edu.cn/kubernetes/apt kubernetes-$(lsb_release -cs) main" >> /etc/apt/sources.list
+
+apt-get update
+
+apt-get install -y --allow-unauthenticated kubelet kubeadm kubectl
+
+ 
+
+也可下载对应的deb文件，通过dpkg -i <文件名>安装：
+
+kubeadm, kubelet ， kubectl ,  kubernetes-cni下载地址：
+
+http://mirrors.ustc.edu.cn/kubernetes/apt/pool/
+
+依赖包socat,ebtables下载地址：https://ubuntu.pkgs.org
+
+ 
+
+ 
+
+ 
+
+ 
+3. 安装CNI plugins
+
+CNI_VERSION="v0.6.0"
+
+mkdir -p /opt/cni/bin
+
+curl -L "https://github.com/containernetworking/plugins/releases/download/${CNI_VERSION}/cni-plugins-amd64-${CNI_VERSION}.tgz" | tar -C /opt/cni/bin -xz
+
+ 
+4. 安装kubeadm, kubelet, kubectl 服务:
+
+RELEASE=v1.11.2
+
+#mkdir -p /opt/bin
+
+#cd /opt/bin
+
+#curl -L --remote-name-all https://storage.googleapis.com/kubernetes-release/release/${RELEASE}/bin/linux/amd64/{kubeadm,kubelet,kubectl}
+
+#chmod +x {kubeadm,kubelet,kubectl}
+
+#curl -sSL "https://raw.githubusercontent.com/kubernetes/kubernetes/${RELEASE}/build/debs/kubelet.service" | sed "s:/usr/bin:/opt/bin:g" > /etc/systemd/system/kubelet.service
+
+#mkdir -p /etc/systemd/system/kubelet.service.d
+
+curl -sSL "https://raw.githubusercontent.com/kubernetes/kubernetes/${RELEASE}/build/debs/10-kubeadm.conf" | sed "s:/usr/bin:/opt/bin:g" > /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+
+RELEASE为版本号，根据你安装的kubeadm设置
+
+ 
+5. 启动kubelet:
+
+systemctl enable kubelet && systemctl start kubelet
+
+ 
+6. 配置cgroup driver 
+
+docker info | grep -i cgroupcat /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+
+ 
+
+通过上面命令查看docker与kubelet的cgroup是否一致，如果不一至，需要修改kubelet配置：
+
+sed -i "s/cgroup-driver=systemd/cgroup-driver=cgroupfs/g" /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+
+重启kubelet：
+
+systemctl daemon-reload
+
+systemctl restart kubelet
+
+ 
+
+以上步骤需要在集群中所有机器中进行。
+
+ 
+
+ 
+部署Master
+1. 初始化Master
+
+ 
+
+使用kubeadm init会自动初始化，初始化需要设置一些配置，创建一个配置文件kubeadm.conf,配置文件内容如下：
+
+ 
+
+apiVersion: kubeadm.k8s.io/v1alpha1
+
+kind: MasterConfiguration
+
+api:
+
+  advertiseAddress: 0.0.0.0
+
+networking:
+
+  podSubnet: 172.18.0.0/16
+
+etcd:
+
+  image: registry.cn-hangzhou.aliyuncs.com/google_containers/etcd-amd64:3.1.11
+
+kubernetesVersion: v1.9.5
+
+imageRepository: registry.cn-hangzhou.aliyuncs.com/google_containers
+
+ 
+
+kubeadm init --config kubeadm.conf
+
+(安装失败后使用kubeadm reset清理环境，否则再次安装会报错) 
+
+ 
+
+ 
+
+初始化成功会输出如下内容：
+
+You can now join any number of machines by running the following on each node
+
+as root:
+
+ 
+
+  kubeadm join --token <token> <master-ip>:<master-port> --discovery-token-ca-cert-hash sha256:<hash>
+
+ 
+
+kubeadm join 命令是用在节点机上，通过此命令使节点主机加入集群。
+
+ 
+
+ 
+2. Master设置：
+
+ 
+
+初始成功后运行如下命令：
+
+mkdir -p $HOME/.kube
+
+sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+
+sudo chown $(id -u):$(id -g) $HOME/.kube/config
+
+ 
+
+如果是root用户，运行命令：
+
+ 
+
+export KUBECONFIG=/etc/kubernetes/admin.conf
+
+ 
+
+ 
+
+ 
+安装pod network
+1. flannel网络安装
+
+sysctl net.bridge.bridge-nf-call-iptables=1
+
+kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/v0.9.1/Documentation/kube-flannel.yml
+
+ 
+2. Weave网络安装
+
+sysctl net.bridge.bridge-nf-call-iptables=1
+
+export kubever=$(kubectl version | base64 | tr -d '\n')
+
+kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$kubever"
+
+kubectl taint nodes --all node-role.kubernetes.io/master-
+
+ 
+
+通过如下命令查看安装的网络：
+
+ 
+
+kubectl get pods --all-namespaces
+
+ 
+
+ 
+Node部署
+
+1. 拷贝Master中的/etc/kubernetes/admin.conf文件到节点主机中对应位置
+
+2. 拷贝Master中的/etc/cni/net.d到节点主机中对应位置
+
+3. 在节点主机上运行如下命令：
+
+sysctl net.bridge.bridge-nf-call-iptables=1
+
+mkdir -p $HOME/.kube
+
+sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+
+sudo chown $(id -u):$(id -g) $HOME/.kube/config
+
+export KUBECONFIG=/etc/kubernetes/admin.conf
+
+sed -i "s,ExecStart=$,Environment=\"KUBELET_EXTRA_ARGS=--pod-infra-container-image=registry.cn-hangzhou.aliyuncs.com/google_containers/pause-amd64:3.1\"\nExecStart=,g" /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+
+systemctl daemon-reload
+
+systemctl restart kubelet
+
+kubeadm join --token <token> <master-ip>:<master-port> --discovery-token-ca-cert-hash sha256:<hash>
+
+kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/v0.9.1/Documentation/kube-flannel.yml
+
+export kubever=$(kubectl version | base64 | tr -d '\n')
+
+kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$kubever"
+
+ 
+
+查看集群运行状态：
+
+kubectl get nodes
+
+ 
+
+输出如下：
+
+NAME           STATUS    ROLES     AGE       VERSION
+
+dosercn40002   Ready     <none>    22h       v1.9.5
+
+dosercn40003   Ready     <none>    22h       v1.9.5
+
+dosercn40004   Ready     master    22h       v1.9.5
