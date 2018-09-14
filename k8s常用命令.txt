@@ -1,2 +1,3 @@
 journalctl -f -u kubelet   查看报错的地方
 kubectl get pods -n kube-system -owide 查看k8s系统pods
+kubectl get pods --namespace=xxx创建容器是如果指定了namespace查看pods需要加namespace参数，默认namespcar是default
