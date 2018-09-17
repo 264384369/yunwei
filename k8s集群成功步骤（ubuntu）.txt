@@ -81,3 +81,9 @@ kubeadm join 192.168.1.155:6443 --token 2w6obv.67mh3872zeu1oseg --discovery-toke
 使用kubectl get nodes 查看是否正常
 使用kubectl get pods -n kube-system -owide查看系统pod是否成功在节点上安装
 使用journalctl -f -u kubelet 查看节点报错位置
+
+如果创建服务后pod之间不互通则在所有主机上使用以下命令：
+iptables -P INPUT ACCEPT
+iptables -P FORWARD ACCEPT
+iptables -F
+iptables -L -n

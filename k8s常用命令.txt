@@ -1,3 +1,16 @@
 journalctl -f -u kubelet   查看报错的地方
 kubectl get pods -n kube-system -owide 查看k8s系统pods
 kubectl get pods --namespace=xxx创建容器是如果指定了namespace查看pods需要加namespace参数，默认namespcar是default
+kubectl edit deployment tomcat -n dev --namespace=XXX编辑修改升级deployment
+kubectl rollout history deployment tomcat  -n dev --namespace=XXX查看版本
+kubectl rollout status deployment hello-world  -n dev  查看升级状态
+kubectl rollout undo deployment hello-world --to-revision=3 -n dev回滚到指定版本
+ 通过此命令可以呼出vi编辑器对模板进行编辑.
+
+# kubectl edit -f deployment.yaml
+
+通过此命令使当前编辑结果生效.
+
+# kubectl apply -f deployment.yaml
+
+再次查看可以看到老版本的deployment已经下架, 新版本的已经生效. 
