@@ -14,3 +14,6 @@ kubectl rollout undo deployment hello-world --to-revision=3 -n dev回滚到指定版本
 # kubectl apply -f deployment.yaml
 
 再次查看可以看到老版本的deployment已经下架, 新版本的已经生效. 
+kubectl replace -f xxx.yaml修改yaml进行更新
+kubectl rollout pause deployment 暂停deployment
+kubectl rollout resume deployment 恢复deployment
