@@ -1,0 +1,8 @@
+在硬件无法更改的情况下修改配置文件/boot/grub/grub.cfg
+在相应选项的linux行添加acpi=off
+如："Install Ubuntu Kylin" {
+	set gfxpayload=keep
+	linux	/casper/vmlinuz.efi locale=zh_CN keyboard-configuration/layoutcode?=cn file=/cdrom/preseed/ubuntu.seed boot=casper acpi=off only-ubiquity quiet splash ---
+	initrd	/casper/initrd.lz
+}
+menuentry
