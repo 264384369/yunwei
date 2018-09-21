@@ -1,0 +1,19 @@
+docker run -it --name GPU -v /pakage/:/pakage --privileged=true --device /dev/nvidia-uvm:/dev/nvidia-uvm --device /dev/nvidia0:/dev/nvidia0 --device /dev/nvidia1:/dev/nvidia1 --device /dev/nvidiactl:/dev/nvidiactl --device /dev/nvidia-modeset:/dev/nvidia-modeset helin/test /bin/bash
+
+
+
+
+
+ 查看需要映射的硬件ls -la /dev | grep nvidia（全部都需要映射）
+
+docker network create --subnet=172.18.0.0/16 mynetwork
+
+docker run -it -p 5005:5005 -p 5006:5006 -p 5007:5007 -p 5008:5008 -p 5009:5009 -p 6005:6005 -p 6006:6006 -p 6007:6007 -p 6008:6008 -p 6009:6009 --log-opt max-size=10m --log-opt max-file=3  --name N2 --network mynetwork --ip 172.18.0.4 -v /package/:/package --device /dev/nvidia-uvm:/dev/nvidia-uvm --device /dev/nvidia1:/dev/nvidia1 --device /dev/nvidiactl:/dev/nvidiactl --device /dev/nvidia-modeset:/dev/nvidia-modeset helin/run:now /bin/bash ./package/run.sh
+
+hadoop
+
+
+docker run -it -p 5000:5000 -p 5001:5001 -p 5002:5002 -p 5003:5003 -p 5004:5004 -p 6000:6000 -p 6001:6001 -p 6002:6002 -p 6003:6003 -p 6004:6004 --log-opt max-size=10m --log-opt max-file=3  --name N1 --network mynetwork --ip 172.18.0.3 -v /package/:/package/ --device /dev/nvidia-uvm:/dev/nvidia-uvm --device /dev/nvidia0:/dev/nvidia0 --device /dev/nvidiactl:/dev/nvidiactl --device /dev/nvidia-modeset:/dev/nvidia-modeset helin/run:now /bin/bash ./package/run.sh
+
+
+docker run -it  -p 5000:5000 -p 6000:6000 -e "hostip=192.168.3.25" --log-opt max-size=2m --log-opt max-file=1 --name fra --device /dev/nvidia-uvm:/dev/nvidia-uvm --device /dev/nvidia0:/dev/nvidia0 --device /dev/nvidiactl:/dev/nvidiactl --device /dev/nvidia-modeset:/dev/nvidia-modeset all:new /bin/bash /fra_tm/run.sh
