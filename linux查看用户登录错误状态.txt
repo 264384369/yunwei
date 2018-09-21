@@ -1,0 +1,2 @@
+查看用户登录失败次数faillog -u remote 
+用户登录失败信息重置faillog -u remote -r

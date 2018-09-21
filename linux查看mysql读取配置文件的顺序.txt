@@ -1,0 +1,11 @@
+（1）先查看mysqld服务进程所在位置：(msyql 启动与否都可以查到)
+#which mysqld
+确保mysqld是存在的。
+
+（2）使用mysqld命令执行以下命令：
+# mysqld --verbose --help | grep -A 1 'Default options'
+之后可以看到类似以下的结果：
+Default options are read from the following files in the given order:
+/etc/my.cnf /etc/mysql/my.cnf /usr/local/mysql/etc/my.cnf ~/.my.cnf
+那么，就可以从结果中知道mysqld服务启动时候，配置文件的读取顺序了。
+前面不存在才会读取后面的
